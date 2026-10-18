@@ -1,0 +1,40 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "ps.gaza.prayer"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "ps.gaza.prayer"
+        minSdk 26
+        targetSdk 33
+        versionCode 16
+        versionName "2.5"
+    }
+
+    buildTypes {
+        release {
+            // Plain Java, no libraries: shrinking gains little and keeps F-Droid builds simple.
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // Reproducible, tracker-free output for F-Droid: no dependency metadata blob in the APK.
+    dependenciesInfo {
+        includeInApk false
+        includeInBundle false
+    }
+
+    lint {
+        // targetSdk 33 is intentional (exact alarms / F-Droid); do not fail release builds on it.
+        disable "ExpiredTargetSdkVersion", "OldTargetApi"
+        abortOnError false
+    }
+}

@@ -1,0 +1,26 @@
+# Metadata for F-Droid. Submit this file as metadata/ps.gaza.prayer.yml
+# in a merge request to https://gitlab.com/fdroid/fdroiddata
+Categories:
+  - Religion
+License: GPL-3.0-or-later
+AuthorName: Adel Hajjaj
+SourceCode: https://github.com/adelomer12/gaza-prayer
+IssueTracker: https://github.com/adelomer12/gaza-prayer/issues
+
+AutoName: صلاة غزة
+
+RepoType: git
+Repo: https://github.com/adelomer12/gaza-prayer.git
+
+Builds:
+  - versionName: '2.5'
+    versionCode: 16
+    commit: v2.5
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: '2.5'
+CurrentVersionCode: 16

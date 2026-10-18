@@ -1,0 +1,13 @@
+A lightweight prayer-times app for the Gaza Strip. Works offline, no location needed. The interface is in Arabic.
+
+<b>Features</b>
+<ul>
+<li>Times from the official Gaza table (365 days), with an Egyptian-method fallback for 29 February.</li>
+<li>Automatic summer/winter time from the Asia/Gaza time zone, with a manual override.</li>
+<li>First adhan before Fajr, and North America (ISNA 15°) Fajr for reference.</li>
+<li>Per-prayer choice of full adhan, short notification, or off.</li>
+<li>Home-screen widget with a live countdown and adjustable colours and transparency.</li>
+<li>Dark mode, per-prayer minute offsets and Hijri date correction.</li>
+</ul>
+
+No data collection, no ads, no trackers.

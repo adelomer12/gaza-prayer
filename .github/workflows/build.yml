@@ -1,0 +1,59 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Check the embedded table matches the CSV
+        run: |
+          python3 tools/gen_table.py data/gaza_prayer_times_year.csv /tmp/GazaTable.java
+          diff -u app/src/main/java/ps/gaza/prayer/GazaTable.java /tmp/GazaTable.java
+
+      - name: Build
+        run: ./gradlew --no-daemon assembleDebug assembleRelease
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apks
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
+
+      # Tagged builds: attach the release APK, signed if the keystore secrets are set.
+      - name: Sign release APK
+        if: startsWith(github.ref, 'refs/tags/v') && env.KEYSTORE_B64 != ''
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > /tmp/release.p12
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/zipalign" -f -p 4 app/build/outputs/apk/release/app-release-unsigned.apk /tmp/aligned.apk
+          "$BT/apksigner" sign --ks /tmp/release.p12 --ks-type PKCS12 --ks-pass env:KEYSTORE_PASSWORD \
+            --out GazaPrayer-${GITHUB_REF_NAME}.apk /tmp/aligned.apk
+          rm /tmp/release.p12
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: GazaPrayer-*.apk
+          fail_on_unmatched_files: false
