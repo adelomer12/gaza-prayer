@@ -13,15 +13,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@v3
-
+      # The GitHub Ubuntu image ships the Android SDK (ANDROID_HOME); AGP fetches missing platforms.
       - name: Check the embedded table matches the CSV
         run: |
           python3 tools/gen_table.py data/gaza_prayer_times_year.csv /tmp/GazaTable.java
