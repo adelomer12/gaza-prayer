@@ -1,0 +1,1 @@
+Current time shown under the date on the main screen and in the widget.

@@ -28,7 +28,7 @@ public class MainActivity extends Activity {
     private Palette pal;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private TextView gregorian, hijri, nextName, countdown, fajrNaTime, firstAdhanText;
+    private TextView gregorian, hijri, clock, nextName, countdown, fajrNaTime, firstAdhanText;
     private final TextView[] rowName = new TextView[6];
     private final TextView[] rowTime = new TextView[6];
     private final LinearLayout[] rows = new LinearLayout[6];
@@ -119,6 +119,8 @@ public class MainActivity extends Activity {
         title.setText("مواقيت الصلاة - غزة");
         gregorian = text(15, pal.headerInk, false);
         hijri = text(15, pal.headerInkSoft, false);
+        clock = text(20, pal.headerInk, true);
+        clock.setTextDirection(View.TEXT_DIRECTION_RTL);
         nextName = text(17, pal.headerInk, true);
         nextName.setPadding(0, dp(14), 0, 0);
         countdown = text(40, pal.headerInk, true);
@@ -149,6 +151,7 @@ public class MainActivity extends Activity {
         titles.addView(titleRow);
         titles.addView(gregorian);
         titles.addView(hijri);
+        titles.addView(clock);
         top.addView(titles, new LinearLayout.LayoutParams(0, -2, 1f));
 
         // North America Fajr (ISNA 15°), shown for reference next to the title
@@ -217,8 +220,18 @@ public class MainActivity extends Activity {
         return f.format(c.getTime()) + (c.get(Calendar.AM_PM) == Calendar.AM ? " ص" : " م");
     }
 
+    /** Current time with seconds, in the app's time zone (follows the summer/winter setting). */
+    static String clockText(long t) {
+        SimpleDateFormat f = new SimpleDateFormat("h:mm:ss", Locale.US);
+        f.setTimeZone(PrayerCalc.TZ);
+        Calendar c = Calendar.getInstance(PrayerCalc.TZ);
+        c.setTimeInMillis(t);
+        return f.format(c.getTime()) + (c.get(Calendar.AM_PM) == Calendar.AM ? " ص" : " م");
+    }
+
     private void refresh() {
         long now = System.currentTimeMillis();
+        clock.setText(clockText(now));
         Calendar today = Calendar.getInstance(PrayerCalc.TZ);
         today.setTimeInMillis(now);
         if (all == null || dayKey == -1) all = Scheduler.todayAndTomorrow(this, today);

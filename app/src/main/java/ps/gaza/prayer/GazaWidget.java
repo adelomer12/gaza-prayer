@@ -18,7 +18,7 @@ import java.util.Locale;
 
 /**
  * Home-screen widget: next prayer with a live countdown (a Chronometer counts down
- * on its own, so no per-second updates), North America Fajr, and today's six times.
+ * on its own, so no per-second updates), a live TextClock, North America Fajr, and today's six times.
  *
  * The widget redraws itself at the next event (any prayer, sunrise, first adhan or
  * local midnight) with a non-wakeup alarm, so it costs no battery while the screen is off;
@@ -130,6 +130,9 @@ public class GazaWidget extends AppWidgetProvider {
         size(v, R.id.w_fajr_na, 19 * k);
         size(v, R.id.w_date, 13 * k);
         v.setTextColor(R.id.w_date, ink);
+        size(v, R.id.w_clock, 20 * k);
+        v.setTextColor(R.id.w_clock, ink);
+        v.setString(R.id.w_clock, "setTimeZone", PrayerCalc.TZ.getID());
 
         // Header: next event and countdown
         if (idx >= 0) {
