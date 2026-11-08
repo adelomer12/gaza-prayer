@@ -12,6 +12,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Job-level so the signing step's `if` can see them (a step's own env is not visible to its `if`).
+    env:
+      KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
     steps:
       - uses: actions/checkout@v5
 
@@ -39,9 +43,6 @@ jobs:
       # Tagged builds: attach the release APK, signed if the keystore secrets are set.
       - name: Sign release APK
         if: startsWith(github.ref, 'refs/tags/') && env.KEYSTORE_B64 != ''
-        env:
-          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           echo "$KEYSTORE_B64" | base64 -d > /tmp/release.p12
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
@@ -55,4 +56,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: GazaPrayer-*.apk
-          fail_on_unmatched_files: false
+          fail_on_unmatched_files: true
