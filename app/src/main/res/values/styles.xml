@@ -20,4 +20,20 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowBackground">@color/night</item>
     </style>
+
+    <!-- Glass: dark glass cards, thin borders and an orange glowing hero card -->
+    <style name="AppTheme.Glass" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/glass_accent</item>
+        <item name="android:colorPrimaryDark">@color/glass_bg</item>
+        <item name="android:colorAccent">@color/glass_accent</item>
+        <item name="android:statusBarColor">@color/glass_bg</item>
+        <item name="android:navigationBarColor">@color/glass_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">@color/glass_bg</item>
+    </style>
+
+    <!-- Transparent host for the "time left" popup opened from the widget -->
+    <style name="PopupHost" parent="android:Theme.Translucent.NoTitleBar">
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+    </style>
 </resources>

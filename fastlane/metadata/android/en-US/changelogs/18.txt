@@ -1,0 +1,4 @@
+- New glass look: dark cards with thin borders, a glowing orange header card and a progress bar to the next prayer.
+- Tap any prayer or the North America Fajr box to see the time left (in the app and the widget).
+- Arrows in the header (or swipe sideways) show the previous or next day's times.
+- Widget: glass style and a separate transparency control for the header and boxes.

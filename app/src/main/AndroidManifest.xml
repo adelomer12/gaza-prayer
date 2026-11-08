@@ -39,6 +39,15 @@
             android:label="الإعدادات"
             android:screenOrientation="portrait" />
 
+        <!-- Transparent host for the widget's "time left" popup -->
+        <activity
+            android:name=".PopupActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@style/PopupHost" />
+
         <service
             android:name=".AdhanService"
             android:exported="false"

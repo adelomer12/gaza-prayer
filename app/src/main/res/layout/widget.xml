@@ -32,6 +32,15 @@
                 android:src="@drawable/widget_header"
                 android:tint="@color/yellow" />
 
+            <!-- Glass style: orange glowing border, shown from GazaWidget -->
+            <ImageView
+                android:id="@+id/w_header_glow"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitXY"
+                android:src="@drawable/widget_header_glow"
+                android:visibility="gone" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -64,10 +73,19 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
+                <FrameLayout
+                    android:id="@+id/w_na_box"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                <ImageView
+                    android:id="@+id/w_box_bg"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/widget_box" />
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/widget_box"
                     android:gravity="center"
                     android:orientation="vertical"
                     android:paddingHorizontal="10dp"
@@ -89,6 +107,7 @@
                         android:textSize="19sp"
                         android:textStyle="bold" />
                 </LinearLayout>
+                </FrameLayout>
             </LinearLayout>
         </FrameLayout>
 
@@ -124,6 +143,7 @@
             android:layout_marginTop="2dp"
             android:orientation="horizontal">
         <FrameLayout
+            android:id="@+id/w_cell0"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -162,6 +182,7 @@
             </LinearLayout>
         </FrameLayout>
         <FrameLayout
+            android:id="@+id/w_cell1"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -200,6 +221,7 @@
             </LinearLayout>
         </FrameLayout>
         <FrameLayout
+            android:id="@+id/w_cell2"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -238,6 +260,7 @@
             </LinearLayout>
         </FrameLayout>
         <FrameLayout
+            android:id="@+id/w_cell3"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -276,6 +299,7 @@
             </LinearLayout>
         </FrameLayout>
         <FrameLayout
+            android:id="@+id/w_cell4"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -314,6 +338,7 @@
             </LinearLayout>
         </FrameLayout>
         <FrameLayout
+            android:id="@+id/w_cell5"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"

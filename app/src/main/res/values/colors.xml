@@ -6,4 +6,6 @@
     <color name="ink">#3E2723</color>
     <color name="gold">#C9A227</color>
     <color name="night">#121212</color>
+    <color name="glass_bg">#0B0E13</color>
+    <color name="glass_accent">#FFA726</color>
 </resources>

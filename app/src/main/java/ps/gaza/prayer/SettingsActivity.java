@@ -53,7 +53,7 @@ public class SettingsActivity extends Activity {
     @Override
     protected void onCreate(Bundle b) {
         pal = Palette.of(this);
-        setTheme(Palette.themeRes(pal.dark));
+        setTheme(Palette.themeRes(pal.style));
         super.onCreate(b);
         getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         prefs = Scheduler.prefs(this);
@@ -83,7 +83,9 @@ public class SettingsActivity extends Activity {
     private LinearLayout card(LinearLayout root, String title) {
         LinearLayout c = new LinearLayout(this);
         c.setOrientation(LinearLayout.VERTICAL);
-        c.setBackground(rounded(pal.card));
+        GradientDrawable cbg = rounded(pal.card);
+        if (pal.glass) cbg.setStroke(dp(1), pal.stroke);
+        c.setBackground(cbg);
         c.setPadding(dp(16), dp(12), dp(16), dp(12));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
         lp.topMargin = dp(16);
@@ -218,7 +220,7 @@ public class SettingsActivity extends Activity {
         r.setPadding(0, dp(12), 0, dp(4));
         TextView l = text(13, pal.inkSoft, false);
         l.setText(label);
-        TextView val = text(17, action == null ? pal.ink : (pal.dark ? pal.header : 0xFF1565C0), true);
+        TextView val = text(17, action == null ? pal.ink : (pal.glass ? pal.accent : pal.dark ? pal.header : 0xFF1565C0), true);
         val.setText(value);
         val.setTextDirection(View.TEXT_DIRECTION_LTR);
         val.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
@@ -361,7 +363,7 @@ public class SettingsActivity extends Activity {
     private void buildLook(LinearLayout root) {
         // Look: follow the phone, or force light / dark
         LinearLayout look = card(root, "المظهر");
-        look.addView(segmented(new String[]{"تلقائي", "فاتح", "داكن"}, new Getter() {
+        look.addView(segmented(new String[]{"تلقائي", "فاتح", "داكن", "زجاجي"}, new Getter() {
             @Override
             public int get() {
                 return prefs.getInt(Palette.KEY_THEME, 0);
@@ -370,7 +372,7 @@ public class SettingsActivity extends Activity {
             @Override
             public void pick(int i) {
                 prefs.edit().putInt(Palette.KEY_THEME, i).apply();
-                if (Palette.isDark(SettingsActivity.this) != pal.dark) {
+                if (Palette.style(SettingsActivity.this) != pal.style) {
                     recreate();
                 } else {
                     repaint();
@@ -378,11 +380,44 @@ public class SettingsActivity extends Activity {
             }
         }));
         TextView lookHint = text(13, pal.inkSoft, false);
-        lookHint.setText("تلقائي: يتبع الوضع الداكن في إعدادات الهاتف.");
+        lookHint.setText("تلقائي: يتبع الوضع الداكن في إعدادات الهاتف.\nزجاجي: بطاقات داكنة شفافة بإطار برتقالي متوهج.");
         lookHint.setPadding(0, dp(8), 0, 0);
         look.addView(lookHint);
 
         LinearLayout w = card(root, "الويدجت");
+        w.addView(label("نمط الويدجت"));
+        w.addView(segmented(new String[]{"عادي", "زجاجي"}, new Getter() {
+            @Override
+            public int get() {
+                return prefs.getBoolean(GazaWidget.KEY_GLASS, false) ? 1 : 0;
+            }
+        }, new Choice() {
+            @Override
+            public void pick(int i) {
+                SharedPreferences.Editor e = prefs.edit();
+                if (i == 1) {
+                    // Dark glass: the colours below can still be changed one by one.
+                    e.putBoolean(GazaWidget.KEY_GLASS, true)
+                            .putInt(GazaWidget.KEY_BG_COLOR, GazaWidget.GLASS_BG)
+                            .putInt(GazaWidget.KEY_HEADER_COLOR, GazaWidget.GLASS_HEADER)
+                            .putInt(GazaWidget.KEY_TEXT_COLOR, GazaWidget.GLASS_TEXT)
+                            .putInt(GazaWidget.KEY_TRANSPARENCY, GazaWidget.GLASS_TRANSPARENCY);
+                } else {
+                    e.putBoolean(GazaWidget.KEY_GLASS, false)
+                            .remove(GazaWidget.KEY_BG_COLOR).remove(GazaWidget.KEY_HEADER_COLOR)
+                            .remove(GazaWidget.KEY_TEXT_COLOR).remove(GazaWidget.KEY_TEXT_LIGHT)
+                            .remove(GazaWidget.KEY_TRANSPARENCY);
+                }
+                e.apply();
+                // The sliders show the new values only after a rebuild.
+                recreate();
+                GazaWidget.updateAll(SettingsActivity.this);
+            }
+        }));
+        TextView styleHint = text(13, pal.inkSoft, false);
+        styleHint.setText("زجاجي: خلفية داكنة شفافة وإطار برتقالي متوهج حول الشريط العلوي.");
+        styleHint.setPadding(0, dp(8), 0, 0);
+        w.addView(styleHint);
         w.addView(label("لون الخلفية"));
         w.addView(new ColorRow(GazaWidget.KEY_BG_COLOR, GazaWidget.BG_DEFAULT, BG_COLORS, true).view);
         w.addView(label("لون الشريط العلوي"));
@@ -414,6 +449,11 @@ public class SettingsActivity extends Activity {
             }
         });
         w.addView(seek);
+        w.addView(transparencySlider("شفافية الشريط العلوي والمربعات", GazaWidget.KEY_HEADER_TRANSPARENCY));
+        TextView tHint = text(13, pal.inkSoft, false);
+        tHint.setText("100% تُخفي الخلفية كلياً ويبقى النص فقط فوق خلفية الشاشة.");
+        tHint.setPadding(0, dp(4), 0, 0);
+        w.addView(tHint);
 
         w.addView(label("حجم الخط"));
         w.addView(segmented(new String[]{"صغير", "متوسط", "كبير"}, new Getter() {
@@ -438,12 +478,44 @@ public class SettingsActivity extends Activity {
             public void onClick(View v) {
                 prefs.edit().remove(GazaWidget.KEY_BG_COLOR).remove(GazaWidget.KEY_HEADER_COLOR)
                         .remove(GazaWidget.KEY_TEXT_COLOR).remove(GazaWidget.KEY_TEXT_LIGHT)
-                        .remove(GazaWidget.KEY_TRANSPARENCY).remove(GazaWidget.KEY_SIZE).apply();
+                        .remove(GazaWidget.KEY_TRANSPARENCY).remove(GazaWidget.KEY_SIZE)
+                        .remove(GazaWidget.KEY_HEADER_TRANSPARENCY).remove(GazaWidget.KEY_GLASS).apply();
                 recreate();
                 GazaWidget.updateAll(SettingsActivity.this);
             }
         });
         w.addView(reset);
+    }
+
+    /** Label with the value in % and a 0..100 slider saved to the given key; the widget redraws on release. */
+    private View transparencySlider(final String title, final String key) {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        final TextView l = label("");
+        box.addView(l);
+        SeekBar seek = new SeekBar(this);
+        seek.setMax(100);
+        seek.setProgress(prefs.getInt(key, 0));
+        seek.setProgressTintList(ColorStateList.valueOf(pal.button));
+        seek.setThumbTintList(ColorStateList.valueOf(YELLOW_DARK));
+        l.setText(title + ": " + seek.getProgress() + "%");
+        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar s, int v, boolean user) {
+                l.setText(title + ": " + v + "%");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar s) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar s) {
+                prefs.edit().putInt(key, s.getProgress()).apply();
+                GazaWidget.updateAll(SettingsActivity.this);
+            }
+        });
+        box.addView(seek);
+        return box;
     }
 
     private interface Choice {

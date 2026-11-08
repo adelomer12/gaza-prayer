@@ -35,6 +35,11 @@ public class GazaWidget extends AppWidgetProvider {
     static final String KEY_TEXT_LIGHT = "w_text_light"; // 1.8 dark/light switch, the default until a text colour is picked
     static final String KEY_TRANSPARENCY = "w_transparency"; // 0 = opaque .. 100 = invisible
     static final String KEY_SIZE = "w_size"; // 0 small, 1 medium, 2 large
+    static final String KEY_HEADER_TRANSPARENCY = "w_header_transparency"; // header, NA box and highlight
+    static final String KEY_GLASS = "w_glass"; // glass style: orange glowing border, orange highlight
+    static final int ACCENT = 0xFFFFA726;
+    // Colours set by the "glass" style button (they can still be changed one by one afterwards)
+    static final int GLASS_BG = 0xFF0D1117, GLASS_HEADER = 0xFF161B22, GLASS_TEXT = 0xFFE6EDF3, GLASS_TRANSPARENCY = 15;
     static final int BG_DEFAULT = 0xFFFFF8E1;
     static final int HEADER_DEFAULT = 0xFFFFC107;
     static final int SIZE_DEFAULT = 1;
@@ -64,6 +69,15 @@ public class GazaWidget extends AppWidgetProvider {
     private static final int[] NAME = {R.id.w_name0, R.id.w_name1, R.id.w_name2, R.id.w_name3, R.id.w_name4, R.id.w_name5};
     private static final int[] HI = {R.id.w_hi0, R.id.w_hi1, R.id.w_hi2, R.id.w_hi3, R.id.w_hi4, R.id.w_hi5};
     private static final int[] TIME = {R.id.w_time0, R.id.w_time1, R.id.w_time2, R.id.w_time3, R.id.w_time4, R.id.w_time5};
+    private static final int[] CELL = {R.id.w_cell0, R.id.w_cell1, R.id.w_cell2, R.id.w_cell3, R.id.w_cell4, R.id.w_cell5};
+
+    /** Opens the "time left" popup for one event (request codes 10..16 keep the intents apart). */
+    private static PendingIntent popupIntent(Context c, int kind) {
+        Intent i = new Intent(c, PopupActivity.class)
+                .putExtra(PopupActivity.EXTRA_KIND, kind)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        return PendingIntent.getActivity(c, 10 + kind, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+    }
 
     @Override
     public void onUpdate(Context c, AppWidgetManager m, int[] ids) {
@@ -115,13 +129,27 @@ public class GazaWidget extends AppWidgetProvider {
         v.setInt(R.id.w_bg, "setColorFilter", bg);
         v.setInt(R.id.w_bg, "setImageAlpha", Math.round(255 * (100 - transparency) / 100f));
         int header = p.getInt(KEY_HEADER_COLOR, HEADER_DEFAULT) | 0xFF000000;
+        boolean glass = p.getBoolean(KEY_GLASS, false);
+        // Header, North America box and highlight share their own transparency.
+        float headerOpacity = (100 - p.getInt(KEY_HEADER_TRANSPARENCY, 0)) / 100f;
+        int headerAlpha = Math.round(255 * headerOpacity);
         v.setInt(R.id.w_header_bg, "setColorFilter", header);
-        int headerInk = contrast(header);
-        v.setTextColor(R.id.w_next_name, headerInk);
+        v.setInt(R.id.w_header_bg, "setImageAlpha", headerAlpha);
+        v.setViewVisibility(R.id.w_header_glow, glass ? android.view.View.VISIBLE : android.view.View.GONE);
+        // Over a faded header the text sits on the widget background, so take the contrast from the blend.
+        int headerInk = contrast(blend(header, bg, headerOpacity));
+        v.setTextColor(R.id.w_next_name, glass ? ACCENT : headerInk);
         v.setTextColor(R.id.w_countdown, headerInk);
-        // Next-prayer highlight: the header colour at 55 % over the background
-        int hiAlpha = 140;
-        int hiInk = contrast(blend(header, bg, hiAlpha / 255f));
+        int box = glass ? 0xFF21262D : 0xFFFFF8E1;
+        v.setInt(R.id.w_box_bg, "setColorFilter", box);
+        v.setInt(R.id.w_box_bg, "setImageAlpha", headerAlpha);
+        int boxInk = contrast(blend(box, blend(header, bg, headerOpacity), headerOpacity));
+        v.setTextColor(R.id.w_fajr_na_label, boxInk);
+        v.setTextColor(R.id.w_fajr_na, boxInk);
+        // Next-prayer highlight: the header colour (orange in glass) at 55 % over the background
+        int hiColor = glass ? ACCENT : header;
+        int hiAlpha = Math.round(140 * headerOpacity);
+        int hiInk = contrast(blend(hiColor, bg, hiAlpha / 255f));
         int ink = textColor(p) | 0xFF000000;
         float k = SCALE[Math.max(0, Math.min(2, p.getInt(KEY_SIZE, SIZE_DEFAULT)))];
         size(v, R.id.w_next_name, 17 * k);
@@ -156,7 +184,7 @@ public class GazaWidget extends AppWidgetProvider {
             boolean hi = idx == shift + i;
             v.setViewVisibility(HI[i], hi ? android.view.View.VISIBLE : android.view.View.GONE);
             if (hi) {
-                v.setInt(HI[i], "setColorFilter", header);
+                v.setInt(HI[i], "setColorFilter", hiColor);
                 v.setInt(HI[i], "setImageAlpha", hiAlpha);
             }
             int col = hi ? hiInk : ink;
@@ -169,6 +197,9 @@ public class GazaWidget extends AppWidgetProvider {
         PendingIntent open = PendingIntent.getActivity(c, 0, new Intent(c, MainActivity.class),
                 PendingIntent.FLAG_IMMUTABLE);
         v.setOnClickPendingIntent(R.id.w_root, open);
+        // A tap on a prayer or on the North America box shows how long is left.
+        for (int i = 0; i < 6; i++) v.setOnClickPendingIntent(CELL[i], popupIntent(c, i));
+        v.setOnClickPendingIntent(R.id.w_na_box, popupIntent(c, TimeLeft.KIND_FAJR_NA));
         m.updateAppWidget(ids, v);
 
         scheduleTick(c, now, all, firstAdhan, today);
