@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
     private int dayKey = -1;
     /** Days away from the list day, changed with the header arrows or a sideways swipe. */
     private int dayOffset = 0;
-    /** Set while the settings screen is open, so coming back from it keeps the shown day. */
+    /** Set while settings or the Qibla compass is open, so coming back keeps the shown day. */
     private boolean inSettings = false;
     /** The day whose times are on screen (for the popups). */
     private Calendar shownDay;
@@ -260,8 +260,23 @@ public class MainActivity extends Activity {
         titleRow.setOrientation(LinearLayout.HORIZONTAL);
         titleRow.setGravity(Gravity.CENTER_VERTICAL);
         titleRow.addView(title, new LinearLayout.LayoutParams(0, -2, 1f));
+        // Qibla compass, just before the gear (RTL: to its right)
+        android.widget.ImageView compass = new android.widget.ImageView(this);
+        compass.setImageResource(R.drawable.ic_compass);
+        compass.setColorFilter(pal.glass ? pal.inkSoft : pal.headerInk);
+        compass.setPadding(dp(8), dp(8), dp(8), dp(8));
+        compass.setContentDescription("اتجاه القبلة");
+        compass.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                inSettings = true; // same as settings: coming back keeps the shown day
+                startActivity(new android.content.Intent(MainActivity.this, QiblaActivity.class));
+            }
+        });
+        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(dp(40), dp(40));
+        cp.setMarginStart(dp(8));
+        titleRow.addView(compass, cp);
         LinearLayout.LayoutParams gp = new LinearLayout.LayoutParams(dp(40), dp(40));
-        gp.setMarginStart(dp(8));
         gp.setMarginEnd(-dp(8)); // icon (not its touch padding) lines up with the NA box edge
         titleRow.addView(gear, gp);
 

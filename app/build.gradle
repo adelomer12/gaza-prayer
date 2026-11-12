@@ -10,8 +10,8 @@ android {
         applicationId "ps.gaza.prayer"
         minSdk 26
         targetSdk 33
-        versionCode 22
-        versionName "2.7.4"
+        versionCode 23
+        versionName "2.8"
     }
 
     buildTypes {

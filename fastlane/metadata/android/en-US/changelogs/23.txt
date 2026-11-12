@@ -1,0 +1,2 @@
+- Qibla compass: a new button next to the settings gear shows the direction of the Kaaba from Gaza (about 153 degrees), with a vibration when the phone points at it.
+- Opening the app again always shows today.
