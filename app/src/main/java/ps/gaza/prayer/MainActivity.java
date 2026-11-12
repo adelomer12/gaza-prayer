@@ -236,11 +236,9 @@ public class MainActivity extends Activity {
         top.setGravity(Gravity.CENTER_VERTICAL);
         LinearLayout titles = new LinearLayout(this);
         titles.setOrientation(LinearLayout.VERTICAL);
-        // Title with the settings gear (offsets, notifications and widget appearance live there)
-        LinearLayout titleRow = new LinearLayout(this);
-        titleRow.setOrientation(LinearLayout.HORIZONTAL);
-        titleRow.setGravity(Gravity.CENTER_VERTICAL);
-        titleRow.addView(title);
+        // The settings gear (offsets, notifications and widget appearance live there) sits in
+        // the side column above the North America box, not beside the title: a wrap_content
+        // title is measured first and, with a large system font, left the gear no width at all.
         android.widget.ImageView gear = new android.widget.ImageView(this);
         gear.setImageResource(R.drawable.ic_settings);
         gear.setColorFilter(pal.glass ? pal.inkSoft : pal.headerInk);
@@ -252,8 +250,7 @@ public class MainActivity extends Activity {
                 startActivity(new android.content.Intent(MainActivity.this, SettingsActivity.class));
             }
         });
-        titleRow.addView(gear, new LinearLayout.LayoutParams(dp(40), dp(40)));
-        titles.addView(titleRow);
+        titles.addView(title);
         titles.addView(gregorian);
         titles.addView(hijri);
         titles.addView(clock);
@@ -291,9 +288,18 @@ public class MainActivity extends Activity {
                 popup(TimeLeft.KIND_FAJR_NA);
             }
         });
-        LinearLayout.LayoutParams nap = new LinearLayout.LayoutParams(-2, -2);
-        nap.setMarginStart(dp(10));
-        top.addView(na, nap);
+        // Side column (left in RTL): gear in the card's corner, then the North America box.
+        // It is wrap_content, so it is measured before the weighted titles and never shrinks.
+        LinearLayout side = new LinearLayout(this);
+        side.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams gp = new LinearLayout.LayoutParams(dp(44), dp(44));
+        gp.gravity = Gravity.END;
+        gp.bottomMargin = dp(4);
+        side.addView(gear, gp);
+        side.addView(na, new LinearLayout.LayoutParams(-2, -2));
+        LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(-2, -2);
+        sp.setMarginStart(dp(10));
+        top.addView(side, sp);
 
         head.addView(top, new LinearLayout.LayoutParams(-1, -2));
         head.addView(nextName);
