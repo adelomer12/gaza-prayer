@@ -1,0 +1,1 @@
+- Opening the app again always shows today (coming back from settings keeps the shown day).

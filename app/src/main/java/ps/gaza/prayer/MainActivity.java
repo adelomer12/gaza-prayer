@@ -39,6 +39,8 @@ public class MainActivity extends Activity {
     private int dayKey = -1;
     /** Days away from the list day, changed with the header arrows or a sideways swipe. */
     private int dayOffset = 0;
+    /** Set while the settings screen is open, so coming back from it keeps the shown day. */
+    private boolean inSettings = false;
     /** The day whose times are on screen (for the popups). */
     private Calendar shownDay;
     private GestureDetector swipe;
@@ -101,6 +103,11 @@ public class MainActivity extends Activity {
             return;
         }
         PrayerCalc.applyTimeMode(this);
+        // Each time the app is opened again it shows today, so a day browsed earlier (or a
+        // sideways swipe by mistake) never leaves it on another date without the highlight.
+        // Coming back from the settings screen keeps the day that was shown.
+        if (!inSettings) dayOffset = 0; // the tick below redraws (dayKey = -1)
+        inSettings = false;
         dayKey = -1;
         handler.post(tick);
     }
@@ -245,6 +252,7 @@ public class MainActivity extends Activity {
         gear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                inSettings = true;
                 startActivity(new android.content.Intent(MainActivity.this, SettingsActivity.class));
             }
         });
