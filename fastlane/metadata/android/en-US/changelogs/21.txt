@@ -1,0 +1,1 @@
+- Tidier header: the settings gear sits level with the title, and the North America Fajr box sits beside the dates and clock.

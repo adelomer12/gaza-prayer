@@ -231,14 +231,12 @@ public class MainActivity extends Activity {
         countdown.setTextDirection(View.TEXT_DIRECTION_LTR);
         countdown.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
 
-        LinearLayout top = new LinearLayout(this);
-        top.setOrientation(LinearLayout.HORIZONTAL);
-        top.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout titles = new LinearLayout(this);
-        titles.setOrientation(LinearLayout.VERTICAL);
-        // The settings gear (offsets, notifications and widget appearance live there) sits in
-        // the side column above the North America box, not beside the title: a wrap_content
-        // title is measured first and, with a large system font, left the gear no width at all.
+        // Header layout (RTL, the first child is on the right):
+        //   [title ............................ gear]
+        //   [gregorian / hijri / clock ...... NA box]
+        //   next prayer name, countdown, progress
+        // The title is weighted (width 0) so the fixed-size gear is measured first and keeps its
+        // 40 dp at any system font size; a long title wraps instead of pushing the gear out.
         android.widget.ImageView gear = new android.widget.ImageView(this);
         gear.setImageResource(R.drawable.ic_settings);
         gear.setColorFilter(pal.glass ? pal.inkSoft : pal.headerInk);
@@ -250,7 +248,20 @@ public class MainActivity extends Activity {
                 startActivity(new android.content.Intent(MainActivity.this, SettingsActivity.class));
             }
         });
-        titles.addView(title);
+        LinearLayout titleRow = new LinearLayout(this);
+        titleRow.setOrientation(LinearLayout.HORIZONTAL);
+        titleRow.setGravity(Gravity.CENTER_VERTICAL);
+        titleRow.addView(title, new LinearLayout.LayoutParams(0, -2, 1f));
+        LinearLayout.LayoutParams gp = new LinearLayout.LayoutParams(dp(40), dp(40));
+        gp.setMarginStart(dp(8));
+        gp.setMarginEnd(-dp(8)); // icon (not its touch padding) lines up with the NA box edge
+        titleRow.addView(gear, gp);
+
+        LinearLayout top = new LinearLayout(this);
+        top.setOrientation(LinearLayout.HORIZONTAL);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout titles = new LinearLayout(this);
+        titles.setOrientation(LinearLayout.VERTICAL);
         titles.addView(gregorian);
         titles.addView(hijri);
         titles.addView(clock);
@@ -259,7 +270,7 @@ public class MainActivity extends Activity {
         titles.addView(backToday, btp);
         top.addView(titles, new LinearLayout.LayoutParams(0, -2, 1f));
 
-        // North America Fajr (ISNA 15°), shown for reference next to the title
+        // North America Fajr (ISNA 15°), beside the dates and clock
         LinearLayout na = new LinearLayout(this);
         na.setOrientation(LinearLayout.VERTICAL);
         na.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -288,20 +299,14 @@ public class MainActivity extends Activity {
                 popup(TimeLeft.KIND_FAJR_NA);
             }
         });
-        // Side column (left in RTL): gear in the card's corner, then the North America box.
-        // It is wrap_content, so it is measured before the weighted titles and never shrinks.
-        LinearLayout side = new LinearLayout(this);
-        side.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams gp = new LinearLayout.LayoutParams(dp(44), dp(44));
-        gp.gravity = Gravity.END;
-        gp.bottomMargin = dp(4);
-        side.addView(gear, gp);
-        side.addView(na, new LinearLayout.LayoutParams(-2, -2));
-        LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(-2, -2);
-        sp.setMarginStart(dp(10));
-        top.addView(side, sp);
+        LinearLayout.LayoutParams nap = new LinearLayout.LayoutParams(-2, -2);
+        nap.setMarginStart(dp(10));
+        top.addView(na, nap);
 
-        head.addView(top, new LinearLayout.LayoutParams(-1, -2));
+        head.addView(titleRow, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-1, -2);
+        tp.topMargin = dp(2);
+        head.addView(top, tp);
         head.addView(nextName);
         head.addView(countdown, new LinearLayout.LayoutParams(-1, -2));
 
