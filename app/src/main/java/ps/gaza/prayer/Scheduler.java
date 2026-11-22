@@ -143,6 +143,24 @@ public final class Scheduler {
         nm.createNotificationChannel(ch);
     }
 
+    /** When the armed alarm is due; the reliability card compares it with when it really fired. */
+    static final String KEY_ARMED_AT = "armed_at", KEY_LAST_LATE = "last_late_sec";
+
+    private static void armedAt(Context c, long when) {
+        prefs(c).edit().putLong(KEY_ARMED_AT, when).apply();
+    }
+
+    /**
+     * Re-arms only if the alarm is gone (force stop / MIUI cleanup) or overdue by 15+ minutes.
+     * A merely late alarm is left alone: scheduleNext() would cancel it and skip that adhan.
+     */
+    static void ensureArmed(Context c) {
+        PendingIntent existing = PendingIntent.getBroadcast(c, 1, new Intent(c, AdhanReceiver.class),
+                PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_IMMUTABLE);
+        long armed = prefs(c).getLong(KEY_ARMED_AT, 0);
+        if (existing == null || armed < System.currentTimeMillis() - 15 * 60000L) scheduleNext(c);
+    }
+
     static void scheduleNext(Context c) {
         AlarmManager am = c.getSystemService(AlarmManager.class);
         Intent i = new Intent(c, AdhanReceiver.class);
@@ -172,13 +190,20 @@ public final class Scheduler {
             }
         }
         if (which < 0) return;
+        armedAt(c, when);
 
         i.putExtra(EXTRA_INDEX, which);
         PendingIntent pi = PendingIntent.getBroadcast(c, 1, i,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         boolean exact = Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms();
         if (exact) {
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when, pi);
+            // Alarm-clock alarms: Doze leaves deep idle just before them, and MIUI/HyperOS
+            // (Xiaomi, Redmi, POCO) does not batch or defer them the way it defers
+            // setExactAndAllowWhileIdle for background apps, which made the adhan come late.
+            // The status-bar alarm icon then shows the next prayer; tapping it opens the app.
+            PendingIntent show = PendingIntent.getActivity(c, 3, new Intent(c, MainActivity.class),
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            am.setAlarmClock(new AlarmManager.AlarmClockInfo(when, show), pi);
         } else {
             am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when, pi);
         }

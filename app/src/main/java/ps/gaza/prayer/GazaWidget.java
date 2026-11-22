@@ -106,6 +106,9 @@ public class GazaWidget extends AppWidgetProvider {
     static void updateAll(Context c) {
         AppWidgetManager m = AppWidgetManager.getInstance(c);
         int[] ids = m.getAppWidgetIds(new ComponentName(c, GazaWidget.class));
+        // Safety net: every redraw also re-arms the adhan alarm, in case the phone dropped it
+        // (MIUI "clean" in recents, a force stop, or Autostart off at boot).
+        Scheduler.ensureArmed(c);
         if (ids == null || ids.length == 0) return;
 
         long now = System.currentTimeMillis();

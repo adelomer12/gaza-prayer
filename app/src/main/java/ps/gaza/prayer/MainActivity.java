@@ -78,7 +78,7 @@ public class MainActivity extends Activity {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
         }
         Scheduler.ensureChannel(this);
-        Scheduler.scheduleNext(this);
+        Scheduler.ensureArmed(this);
     }
 
     @Override
