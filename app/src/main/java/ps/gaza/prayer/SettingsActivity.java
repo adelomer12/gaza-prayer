@@ -322,6 +322,130 @@ public class SettingsActivity extends Activity {
         vol.setText("يُشغَّل الأذان على صوت المنبّه في الهاتف.");
         vol.setPadding(0, dp(8), 0, 0);
         test.addView(vol);
+
+        buildReliability(root);
+    }
+
+    // ---- Late adhan on Xiaomi and other aggressive battery savers ----
+
+    private TextView reliabilityStatus;
+
+    static boolean isXiaomi() {
+        String m = (android.os.Build.MANUFACTURER + " " + android.os.Build.BRAND).toLowerCase(Locale.ROOT);
+        return m.contains("xiaomi") || m.contains("redmi") || m.contains("poco");
+    }
+
+    private boolean ignoringBattery() {
+        android.os.PowerManager pm = getSystemService(android.os.PowerManager.class);
+        return pm != null && pm.isIgnoringBatteryOptimizations(getPackageName());
+    }
+
+    private void buildReliability(LinearLayout root) {
+        LinearLayout r = card(root, "إذا تأخر الأذان");
+        reliabilityStatus = text(14, pal.ink, false);
+        reliabilityStatus.setPadding(0, dp(6), 0, dp(6));
+        r.addView(reliabilityStatus);
+
+        if (!ignoringBattery()) {
+            r.addView(actionButton("إيقاف تحسين البطارية للتطبيق", true, new Runnable() {
+                @Override
+                public void run() {
+                    openFirst(new android.content.Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                            android.net.Uri.parse("package:" + getPackageName())));
+                }
+            }));
+        }
+        if (isXiaomi()) {
+            r.addView(actionButton("التشغيل التلقائي (Autostart)", false, new Runnable() {
+                @Override
+                public void run() {
+                    openFirst(new android.content.Intent().setComponent(new android.content.ComponentName(
+                            "com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity")));
+                }
+            }));
+            r.addView(actionButton("توفير البطارية: بلا قيود", false, new Runnable() {
+                @Override
+                public void run() {
+                    openFirst(new android.content.Intent()
+                            .setComponent(new android.content.ComponentName(
+                                    "com.miui.powerkeeper", "com.miui.powerkeeper.ui.HiddenAppsConfigActivity"))
+                            .putExtra("package_name", getPackageName())
+                            .putExtra("package_label", getString(R.string.app_name)));
+                }
+            }));
+        }
+        r.addView(actionButton("صفحة التطبيق في الإعدادات", false, new Runnable() {
+            @Override
+            public void run() {
+                openFirst(null);
+            }
+        }));
+
+        TextView how = text(13, pal.inkSoft, false);
+        how.setText(isXiaomi()
+                ? "في جوالات شاومي وريدمي وبوكو:\n"
+                + "١. فعّل «التشغيل التلقائي» لهذا التطبيق.\n"
+                + "٢. اجعل «توفير البطارية» على «بلا قيود».\n"
+                + "٣. في قائمة التطبيقات الأخيرة اضغط مطولاً على التطبيق واختر القفل 🔒 حتى لا يُغلق عند التنظيف.\n"
+                + "بعد ذلك افتح التطبيق مرة واحدة ليعيد ضبط الموعد."
+                : "إذا تأخر الأذان أو لم يعمل: أوقف تحسين البطارية للتطبيق، ولا تغلقه إجبارياً من الإعدادات، ثم افتحه مرة واحدة.");
+        how.setPadding(0, dp(10), 0, 0);
+        r.addView(how);
+        refreshReliability();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshReliability();
+    }
+
+    private void refreshReliability() {
+        if (reliabilityStatus == null) return;
+        StringBuilder b = new StringBuilder();
+        b.append(ignoringBattery() ? "✔ تحسين البطارية متوقف للتطبيق" : "✖ تحسين البطارية يعمل على التطبيق");
+        long late = prefs.getLong(Scheduler.KEY_LAST_LATE, -1);
+        if (late >= 0) {
+            b.append("\nآخر تنبيه جاء متأخراً ");
+            if (late < 60) b.append(late).append(" ثانية");
+            else b.append(late / 60).append(" دقيقة");
+        }
+        reliabilityStatus.setText(b.toString());
+    }
+
+    private TextView actionButton(String label, boolean primary, final Runnable action) {
+        TextView t = text(15, primary ? pal.buttonInk : pal.ink, true);
+        t.setText(label);
+        t.setGravity(Gravity.CENTER);
+        t.setPadding(dp(8), dp(10), dp(8), dp(10));
+        t.setBackground(rounded(primary ? pal.button : pal.chip));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+        lp.topMargin = dp(8);
+        t.setLayoutParams(lp);
+        t.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                action.run();
+            }
+        });
+        return t;
+    }
+
+    /** Opens the given screen; if this ROM lacks it, falls back to the app's own settings page. */
+    private void openFirst(android.content.Intent i) {
+        if (i != null) {
+            try {
+                startActivity(i);
+                return;
+            } catch (Exception ignored) {
+                // ActivityNotFoundException, or SecurityException on ROMs that hide the MIUI screens
+            }
+        }
+        try {
+            startActivity(new android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    android.net.Uri.parse("package:" + getPackageName())));
+        } catch (Exception ignored) {
+        }
     }
 
     // ---- Time offsets ----

@@ -11,6 +11,12 @@ public class AdhanReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context c, Intent intent) {
         int idx = intent.getIntExtra(Scheduler.EXTRA_INDEX, -1);
+        // Record how late this alarm fired (shown in settings, to tell a delayed phone from a wrong table).
+        long due = Scheduler.prefs(c).getLong(Scheduler.KEY_ARMED_AT, 0);
+        if (due > 0) {
+            long late = Math.max(0, (System.currentTimeMillis() - due) / 1000);
+            Scheduler.prefs(c).edit().putLong(Scheduler.KEY_LAST_LATE, late).apply();
+        }
         int mode = idx >= 0 && idx <= Scheduler.INDEX_FAJR_NA ? Scheduler.mode(c, idx) : Scheduler.MODE_OFF;
         if (mode == Scheduler.MODE_ADHAN) {
             // Exact alarms may start a foreground service from the background (Android 12+ exemption).
