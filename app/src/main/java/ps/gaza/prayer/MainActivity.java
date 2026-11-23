@@ -407,7 +407,7 @@ public class MainActivity extends Activity {
         Calendar today = Calendar.getInstance(PrayerCalc.TZ);
         today.setTimeInMillis(now);
         if (all == null || dayKey == -1) all = Scheduler.todayAndTomorrow(this, today);
-        // After Isha the list moves on to tomorrow's times (dates stay on today until midnight).
+        // After Isha the list (and its dates) move on to tomorrow.
         int shift = Scheduler.listShift(all, now);
         int key = ((today.get(Calendar.YEAR) % 100 * 1000 + today.get(Calendar.DAY_OF_YEAR)) * 10 + shift) * 1000
                 + (dayOffset + 500);
@@ -418,22 +418,22 @@ public class MainActivity extends Activity {
             Calendar listDay = (Calendar) today.clone();
             listDay.add(Calendar.DAY_OF_MONTH, shift / 6);
             long[] shown;
-            Calendar dateDay;
             if (dayOffset == 0) {
                 shown = new long[6];
                 System.arraycopy(all, shift, shown, 0, 6);
                 shownDay = listDay;
-                dateDay = today;
             } else {
                 shownDay = (Calendar) listDay.clone();
                 shownDay.add(Calendar.DAY_OF_MONTH, dayOffset);
                 shown = Scheduler.dayTimes(this, shownDay);
-                dateDay = shownDay;
             }
+            // The dates always name the day whose times are listed. After Isha that is
+            // tomorrow; labelling it with today made the arrows show today twice
+            // (back = today, forward = the day after tomorrow) and skip tomorrow.
             SimpleDateFormat g = new SimpleDateFormat("EEEE d MMMM yyyy", new Locale("ar"));
             g.setTimeZone(PrayerCalc.TZ);
-            gregorian.setText(g.format(dateDay.getTime()));
-            hijri.setText(PrayerCalc.hijriText(dateDay, Scheduler.hijriOffset(this)));
+            gregorian.setText(g.format(shownDay.getTime()));
+            hijri.setText(PrayerCalc.hijriText(shownDay, Scheduler.hijriOffset(this)));
             for (int i = 0; i < 6; i++) rowTime[i].setText(fmt(shown[i]));
             fajrNaTime.setText(fmt(Scheduler.fajrNorthAmerica(this, shownDay)));
             firstAdhanText.setText("الأذان الأول " + fmt(Scheduler.firstAdhan(this, shown[PrayerCalc.FAJR])));

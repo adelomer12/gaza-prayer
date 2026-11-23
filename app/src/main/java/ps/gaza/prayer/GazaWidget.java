@@ -116,7 +116,7 @@ public class GazaWidget extends AppWidgetProvider {
         Calendar today = Calendar.getInstance(PrayerCalc.TZ);
         today.setTimeInMillis(now);
         long[] all = Scheduler.todayAndTomorrow(c, today);
-        // After Isha the times shown are tomorrow's (dates stay on today until midnight).
+        // After Isha the times shown, and their date, are tomorrow's.
         int shift = Scheduler.listShift(all, now);
         Calendar listDay = (Calendar) today.clone();
         listDay.add(Calendar.DAY_OF_MONTH, shift / 6);
@@ -178,7 +178,7 @@ public class GazaWidget extends AppWidgetProvider {
 
         SimpleDateFormat g = new SimpleDateFormat("EEEE d MMMM", new Locale("ar"));
         g.setTimeZone(PrayerCalc.TZ);
-        v.setTextViewText(R.id.w_date, g.format(today.getTime()) + "  •  " + PrayerCalc.hijriText(today, Scheduler.hijriOffset(c))
+        v.setTextViewText(R.id.w_date, g.format(listDay.getTime()) + "  •  " + PrayerCalc.hijriText(listDay, Scheduler.hijriOffset(c))
                 + "  •  الأذان الأول " + MainActivity.fmt(firstAdhan));
 
         // Today's times, next one highlighted (after Isha the next is tomorrow, nothing highlighted)

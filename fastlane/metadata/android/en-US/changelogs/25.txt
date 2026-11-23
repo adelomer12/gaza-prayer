@@ -1,0 +1,1 @@
+- After Isha the date at the top now names the day whose times are listed (tomorrow), so the day arrows no longer show today twice and skip tomorrow. The widget date follows the same rule.
